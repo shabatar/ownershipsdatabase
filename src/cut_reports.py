@@ -1,12 +1,12 @@
 import os
 import configparser
-from src.utils import compare_name, find_most_dense_region, extend_until_table_ends, not_found
+from utils import compare_name, find_most_dense_region, extend_until_table_ends, not_found
 
 if __name__ == '__main__':
     # Keywords to use while retrieving data from report grouped by its meaning
     keywords = []
     curr_group = []
-    with open("../config/keywords.txt") as keywords_file:
+    with open("./config/keywords.txt") as keywords_file:
         line = keywords_file.readline()
         while line:
             if "------" in line:
@@ -19,7 +19,7 @@ if __name__ == '__main__':
         keywords.append(set(curr_group))
 
     most_relevant_keywords = set()
-    with open("../config/most_relevant_keywords.txt") as keywords_file:
+    with open("./config/most_relevant_keywords.txt") as keywords_file:
         line = keywords_file.readline()
         while line:
             if not line.isspace():
@@ -30,7 +30,7 @@ if __name__ == '__main__':
     print(most_relevant_keywords)
 
     config = configparser.ConfigParser()
-    config.read('../config/settings.txt')
+    config.read('./config/settings.txt')
     config = config['DEFAULT']
     reports_count = int(config['ReportsCount'])
     region_size = int(config['RegionSize'])
@@ -38,11 +38,11 @@ if __name__ == '__main__':
     start_skip_percent = float(config['StartSkipPercent'])
     extend_until_table = config['ExtendUntilTable'] != 'no'
 
-    files = sorted(os.listdir('../data'), key=compare_name)
+    files = sorted(os.listdir('./data'), key=compare_name)
 
     for file_index, filename in enumerate(files[:reports_count]):
         try:
-            file = open('../data/' + filename, 'r', encoding='windows-1252')
+            file = open('./data/' + filename, 'r', encoding='windows-1252')
         except IsADirectoryError:
             continue
 

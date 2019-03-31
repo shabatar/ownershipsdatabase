@@ -4,7 +4,7 @@ import requests
 import os
 
 if __name__ == '__main__':
-    df = pd.read_csv('../config/sp-500.csv', sep=',', header=0)
+    df = pd.read_csv('./config/sp-500.csv', sep=',', header=0)
     site = 'https://www.sec.gov'
     link = lambda \
             cik: 'https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK={}&type=def+14A&dateb=&owner=exclude&count=40'.format(
@@ -12,8 +12,6 @@ if __name__ == '__main__':
     ciks = df['Symbol']
     names = list(df['Name'])
 
-    reports = []
-    report = open('loading_report.txt', 'a+')
     for i, cik in enumerate(list(ciks)):
         response = requests.get(link(cik))
         tree = lxml.html.fromstring(response.text)
@@ -42,15 +40,14 @@ if __name__ == '__main__':
             print(err)
             continue
 
-        reports.append(report)
         res = '{} report successfully added'.format(names[i])
         print(res)
-        if not os.path.exists('../data'):
-            os.mkdir('../data')
+        if not os.path.exists('./data'):
+            os.mkdir('./data')
 
         formattedName = names[i].replace("/", "-").replace("\\", "-")
 
-        file = open("../data/{}-{}.htm".format(i + 1, formattedName), "w")
+        file = open("./data/{}-{}.htm".format(i + 1, formattedName), "w")
         file.write(report.text)
         file.close()
         continue

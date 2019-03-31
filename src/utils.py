@@ -1,6 +1,5 @@
 from collections import Counter
 
-
 def contains_any(xs: list, ys: list):
     for x in xs:
         if isinstance(x, float):
