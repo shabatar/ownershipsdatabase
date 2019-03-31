@@ -1,5 +1,3 @@
-import pickle
-
 import lxml.html
 import pandas as pd
 import requests
@@ -15,7 +13,6 @@ if __name__ == '__main__':
     names = list(df['Name'])
 
     reports = []
-    f = open('companies.pkl', 'ab+')
     report = open('loading_report.txt', 'a+')
     for i, cik in enumerate(list(ciks)):
         response = requests.get(link(cik))
@@ -28,7 +25,6 @@ if __name__ == '__main__':
             report_site_url = url_names[0]
         except:
             report = ""
-            pickle.dump(report, f)
             err = '{} report not found'.format(names[i])
             print(err)
             continue
@@ -42,7 +38,6 @@ if __name__ == '__main__':
             report = requests.get(site + url_names[0])
         except:
             report = ""
-            pickle.dump(report, f)
             err = '{} htm file not found'.format(names[i])
             print(err)
             continue
@@ -59,5 +54,3 @@ if __name__ == '__main__':
         file.write(report.text)
         file.close()
         continue
-
-    f.close()
