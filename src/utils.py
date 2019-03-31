@@ -3,7 +3,8 @@ from collections import Counter
 
 def contains_any(xs: list, ys: list):
     for x in xs:
-        if isinstance(x, float): return False
+        if isinstance(x, float):
+            return False
         for y in ys:
             if y.lower() in x.lower():
                 return True
@@ -45,14 +46,14 @@ def is_like_number(s: str):
     return False
 
 
-def find_most_dense_region(lines: list, keywords: list, keywords_hits: dict, most_relevant_keywords: set):
+def find_most_dense_region(lines: list, keywords: list, most_relevant_keywords: set, region_size: int):
     start = 0
-    end = 50
+    end = region_size
     result_start = -1
     result_end = -1
 
     found, found_most_relevant = find_keywords(lines[start:end], keywords, most_relevant_keywords)
-    result_found = found
+    # result_found = found
     count = len(found)
     result_count = count
     while end < len(lines):
@@ -73,7 +74,7 @@ def find_most_dense_region(lines: list, keywords: list, keywords_hits: dict, mos
             count = 2 * len(found_most_relevant) + group_count
 
         if count >= result_count:
-            result_found = found
+            # result_found = found
             result_count = count
             result_start = start
             result_end = end
@@ -81,7 +82,7 @@ def find_most_dense_region(lines: list, keywords: list, keywords_hits: dict, mos
         start += 1
         end += 1
 
-    for kw in result_found:
-        keywords_hits[kw] += 1
+    # for kw in result_found:
+    # keywords_hits[kw] += 1
 
     return result_count, result_start, result_end

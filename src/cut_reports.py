@@ -1,62 +1,31 @@
 import os
-from utils import compare_name, contains_any, find_most_dense_region
+import configparser
+from src.utils import compare_name, contains_any, find_most_dense_region
 
 # Keywords to use while retrieving data from report grouped by its meaning
-keywords = [
-    {
-        'securities beneficially owned by',
-        'common stock beneficially owned by',
-        'shares beneficially owned',
-        'of beneficial owner',
-        'beneficial ownership of',
-        'certain beneficial ownership',
-        'name of beneficial owner',
-        'ownership of certain beneficial owners',
-    },
+keywords = []
+with open("./config/keywords.txt") as keywords_file:
+    curr_group = []
+    line = keywords_file.readline()
+    while line:
+        if line.isspace():
+            continue
+        elif "------" in line:
+            keywords.append(set(curr_group))
+            curr_group = []
+        else:
+            curr_group.append(line)
+        line = keywords_file.readline()
 
-    {
-        'security ownership of certain',
-        'securities ownership of certain',
-        'security ownership of principal',
-        'stock ownership of certain',
-        'stock ownership of certain',
-        'stock ownership of principal',
-        'stock ownership of principal',
-        'of our stock ownership',
-        'security ownership of management',
-        'ownership of our common shares',
-    },
+print(keywords)
 
-    {
-        'the following table',
-        'the table below',
-    },
-
-    {
-        'principal shareholders',
-        'principal stockholders',
-        'ownership percentage',
-        'major stockholders',
-    },
-
-    {
-        'more than 5%',
-        'more than five percent',
-        '5% or more',
-        'five percent or more',
-    },
-
-    {
-        'of voting common stock',
-        'of our voting common stock',
-        'of our common stock',
-    },
-
-    {
-        'blackrock',
-        'vanguard',
-    }
-]
+config = configparser.ConfigParser()
+config.read('./config/settings.txt')
+reports_count = config['ReportsCount']
+region_size = config['RegionSize']
+end_margin = config['EndMargin']
+start_skip = config['StartSkip']
+extend_until_table = config['ExtendUntilTable']
 
 most_relevant_keywords = {
     'more than 5%',
@@ -67,18 +36,24 @@ most_relevant_keywords = {
 
 not_found = lambda x, y: x == -1 and y == -1
 
-keywords_hits = {}
-for group in keywords:
-    for kw in group:
-        keywords_hits[kw] = 0
+# keywords_hits = {}
+# for group in keywords:
+#     for kw in group:
+#         keywords_hits[kw] = 0
+
+
+def extend_until_table_ends(end: int, lines: list):
+    end_line = lines[end - 1]
+    while not (contains_any([end_line], ["<table>", "</table>"])) and end < len(lines):
+        end += 1
+        end_line = lines[end - 1]
+    return end
+
 
 if __name__ == '__main__':
     files = sorted(os.listdir('data'), key=compare_name)
 
-    for file_index, filename in enumerate(files):
-
-        if file_index > 100: break
-
+    for file_index, filename in enumerate(files)[:reports_count]:
         try:
             file = open('data/' + filename, 'r', encoding='windows-1252')
         except IsADirectoryError:
@@ -95,23 +70,17 @@ if __name__ == '__main__':
 
             lines = long_line.replace("<div", "\n<div").split("\n")
 
-        margin = len(lines) // 10
-        lines = lines[margin:]
-        count, start, end = find_most_dense_region(lines, keywords, keywords_hits, most_relevant_keywords)
+        start_margin = len(lines) * start_skip
+        lines = lines[start_margin:]
+        count, start, end = find_most_dense_region(lines, keywords, most_relevant_keywords, region_size)
 
-        end_line = lines[end - 1]
-        while not (contains_any([end_line], ["<table>", "</table>"])) and end < len(lines):
-            end += 1
-            end_line = lines[end - 1]
+        if extend_until_table:
+            end = extend_until_table_ends(end, lines)
 
-        end += 40
+        end += end_margin
 
-        # start_line = lines[start - 1]
-        # while not (contains_any([start_line], ["<table>", "</table>"])) and start >= len(lines):
-        #     start -= 1
-        #     start_line = lines[start - 1]
-
-        print("{}: {}".format(filename, count))
+        # print("{}: {}".format(filename, count))
+        print("{}: processed".format(filename))
 
         if not_found(start, end):
             file.close()
@@ -125,6 +94,6 @@ if __name__ == '__main__':
         fileCut.close()
         file.close()
 
-    print("--- Keywords hits ---")
-    for (kw, hits) in keywords_hits.items():
-        print("{}: {}".format(kw, hits))
+    # print("--- Keywords hits ---")
+    # for (kw, hits) in keywords_hits.items():
+    #     print("{}: {}".format(kw, hits))
