@@ -86,3 +86,15 @@ def find_most_dense_region(lines: list, keywords: list, most_relevant_keywords: 
     # keywords_hits[kw] += 1
 
     return result_count, result_start, result_end
+
+
+def extend_until_table_ends(end: int, lines: list):
+    end_line = lines[end - 1]
+    while not (contains_any([end_line], ["<table>", "</table>"])) and end < len(lines):
+        end += 1
+        end_line = lines[end - 1]
+    return end
+
+
+def not_found(start, end):
+    return start == -1 and end == -1

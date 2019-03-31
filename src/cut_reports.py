@@ -1,56 +1,40 @@
 import os
 import configparser
-from src.utils import compare_name, contains_any, find_most_dense_region
-
-# Keywords to use while retrieving data from report grouped by its meaning
-keywords = []
-with open("./config/keywords.txt") as keywords_file:
-    curr_group = []
-    line = keywords_file.readline()
-    while line:
-        if line.isspace():
-            continue
-        elif "------" in line:
-            keywords.append(set(curr_group))
-            curr_group = []
-        else:
-            curr_group.append(line)
-        line = keywords_file.readline()
-
-print(keywords)
-
-config = configparser.ConfigParser()
-config.read('./config/settings.txt')
-reports_count = config['ReportsCount']
-region_size = config['RegionSize']
-end_margin = config['EndMargin']
-start_skip = config['StartSkip']
-extend_until_table = config['ExtendUntilTable']
-
-most_relevant_keywords = {
-    'more than 5%',
-    'more than five percent',
-    '5% or more',
-    'five percent or more',
-}
-
-not_found = lambda x, y: x == -1 and y == -1
-
-# keywords_hits = {}
-# for group in keywords:
-#     for kw in group:
-#         keywords_hits[kw] = 0
-
-
-def extend_until_table_ends(end: int, lines: list):
-    end_line = lines[end - 1]
-    while not (contains_any([end_line], ["<table>", "</table>"])) and end < len(lines):
-        end += 1
-        end_line = lines[end - 1]
-    return end
-
+from src.utils import compare_name, find_most_dense_region, extend_until_table_ends
 
 if __name__ == '__main__':
+    # Keywords to use while retrieving data from report grouped by its meaning
+    keywords = []
+    with open("./config/keywords.txt") as keywords_file:
+        curr_group = []
+        line = keywords_file.readline()
+        while line:
+            if "------" in line:
+                keywords.append(set(curr_group))
+                curr_group = []
+            elif not line.isspace():
+                curr_group.append(line)
+            line = keywords_file.readline()
+
+    most_relevant_keywords = set()
+    with open("./config/most_relevant_keywords.txt") as keywords_file:
+        line = keywords_file.readline()
+        while line:
+            if not line.isspace():
+                most_relevant_keywords.add(line)
+            line = keywords_file.readline()
+
+    print(keywords)
+    print(most_relevant_keywords)
+
+    config = configparser.ConfigParser()
+    config.read('./config/settings.txt')
+    reports_count = config['ReportsCount']
+    region_size = config['RegionSize']
+    end_margin = config['EndMargin']
+    start_skip = config['StartSkip']
+    extend_until_table = config['ExtendUntilTable']
+
     files = sorted(os.listdir('data'), key=compare_name)
 
     for file_index, filename in enumerate(files)[:reports_count]:
