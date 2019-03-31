@@ -1,45 +1,48 @@
 import os
 import configparser
-from src.utils import compare_name, find_most_dense_region, extend_until_table_ends
+from src.utils import compare_name, find_most_dense_region, extend_until_table_ends, not_found
 
 if __name__ == '__main__':
     # Keywords to use while retrieving data from report grouped by its meaning
     keywords = []
-    with open("./config/keywords.txt") as keywords_file:
-        curr_group = []
+    curr_group = []
+    with open("../config/keywords.txt") as keywords_file:
         line = keywords_file.readline()
         while line:
             if "------" in line:
                 keywords.append(set(curr_group))
                 curr_group = []
             elif not line.isspace():
-                curr_group.append(line)
+                curr_group.append(line.strip())
             line = keywords_file.readline()
+    if len(curr_group) > 0:
+        keywords.append(set(curr_group))
 
     most_relevant_keywords = set()
-    with open("./config/most_relevant_keywords.txt") as keywords_file:
+    with open("../config/most_relevant_keywords.txt") as keywords_file:
         line = keywords_file.readline()
         while line:
             if not line.isspace():
-                most_relevant_keywords.add(line)
+                most_relevant_keywords.add(line.strip())
             line = keywords_file.readline()
 
     print(keywords)
     print(most_relevant_keywords)
 
     config = configparser.ConfigParser()
-    config.read('./config/settings.txt')
-    reports_count = config['ReportsCount']
-    region_size = config['RegionSize']
-    end_margin = config['EndMargin']
-    start_skip = config['StartSkip']
-    extend_until_table = config['ExtendUntilTable']
+    config.read('../config/settings.txt')
+    config = config['DEFAULT']
+    reports_count = int(config['ReportsCount'])
+    region_size = int(config['RegionSize'])
+    end_margin = int(config['EndMargin'])
+    start_skip_percent = float(config['StartSkipPercent'])
+    extend_until_table = config['ExtendUntilTable'] != 'no'
 
-    files = sorted(os.listdir('data'), key=compare_name)
+    files = sorted(os.listdir('../data'), key=compare_name)
 
-    for file_index, filename in enumerate(files)[:reports_count]:
+    for file_index, filename in enumerate(files[:reports_count]):
         try:
-            file = open('data/' + filename, 'r', encoding='windows-1252')
+            file = open('../data/' + filename, 'r', encoding='windows-1252')
         except IsADirectoryError:
             continue
 
@@ -54,7 +57,7 @@ if __name__ == '__main__':
 
             lines = long_line.replace("<div", "\n<div").split("\n")
 
-        start_margin = len(lines) * start_skip
+        start_margin = int(len(lines) * start_skip_percent)
         lines = lines[start_margin:]
         count, start, end = find_most_dense_region(lines, keywords, most_relevant_keywords, region_size)
 
@@ -69,9 +72,9 @@ if __name__ == '__main__':
         if not_found(start, end):
             file.close()
             continue
-        if not os.path.exists('dataCut'):
-            os.mkdir('dataCut')
-        fileCut = open('dataCut/' + filename, 'w', encoding='windows-1252')
+        if not os.path.exists('../dataCut'):
+            os.mkdir('../dataCut')
+        fileCut = open('../dataCut/' + filename, 'w', encoding='windows-1252')
         file.seek(0)
         for line in lines[start:end]:
             fileCut.write(line)

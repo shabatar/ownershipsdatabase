@@ -1,5 +1,6 @@
+[DEFAULT]
 ReportsCount = 100
 RegionSize = 50
 EndMargin = 40
-StartSkip = 0.1
-ExtendUntilTable = True
+StartSkipPercent = 0.1
+ExtendUntilTable = yes
