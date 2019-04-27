@@ -1,5 +1,6 @@
 [DEFAULT]
-ReportsCount = 100
+ReportsStart = 10
+ReportsEnd = 13
 RegionSize = 50
 EndMargin = 40
 StartSkipPercent = 0.1

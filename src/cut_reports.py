@@ -6,7 +6,10 @@ if __name__ == '__main__':
     # Keywords to use while retrieving data from report grouped by its meaning
     keywords = []
     curr_group = []
-    with open("./config/keywords.txt") as keywords_file:
+    config_path = os.path.join(os.path.curdir, 'config')
+    data_path = os.path.join(os.path.curdir, 'data')
+    dataCut_path = os.path.join(os.path.curdir, 'dataCut')
+    with open(os.path.join(config_path, 'keywords.txt')) as keywords_file:
         line = keywords_file.readline()
         while line:
             if "------" in line:
@@ -19,7 +22,7 @@ if __name__ == '__main__':
         keywords.append(set(curr_group))
 
     most_relevant_keywords = set()
-    with open("./config/most_relevant_keywords.txt") as keywords_file:
+    with open(os.path.join(config_path, 'most_relevant_keywords.txt')) as keywords_file:
         line = keywords_file.readline()
         while line:
             if not line.isspace():
@@ -30,19 +33,21 @@ if __name__ == '__main__':
     print(most_relevant_keywords)
 
     config = configparser.ConfigParser()
-    config.read('./config/settings.txt')
+    config.read(os.path.join(config_path, 'settings.txt'))
     config = config['DEFAULT']
-    reports_count = int(config['ReportsCount'])
+    reports_start = int(config['ReportsStart']) - 1  # config indices from 1, not from 0
+    reports_end = int(config['ReportsEnd']) - 1
     region_size = int(config['RegionSize'])
     end_margin = int(config['EndMargin'])
     start_skip_percent = float(config['StartSkipPercent'])
     extend_until_table = config['ExtendUntilTable'] != 'no'
 
-    files = sorted(os.listdir('./data'), key=compare_name)
+    files = sorted(os.listdir(data_path), key=compare_name)
+    reports_end = min(reports_end, len(files))
 
-    for file_index, filename in enumerate(files[:reports_count]):
+    for filename in files[reports_start:reports_end+1]:
         try:
-            file = open('./data/' + filename, 'r', encoding='windows-1252')
+            file = open(os.path.join(data_path, filename), 'r', encoding='windows-1252')
         except IsADirectoryError:
             continue
 
@@ -72,9 +77,10 @@ if __name__ == '__main__':
         if not_found(start, end):
             file.close()
             continue
-        if not os.path.exists('../dataCut'):
-            os.mkdir('../dataCut')
-        fileCut = open('../dataCut/' + filename, 'w', encoding='windows-1252')
+
+        if not os.path.exists(dataCut_path):
+            os.mkdir(dataCut_path)
+        fileCut = open(os.path.join(dataCut_path, filename), 'w', encoding='windows-1252')
         file.seek(0)
         for line in lines[start:end]:
             fileCut.write(line)
